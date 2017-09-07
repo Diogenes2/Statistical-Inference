@@ -1,0 +1,79 @@
+---
+title: "ToothGrowth Analysis"
+author: "Benjamin Milks"
+fontsize: 12pt
+output: 
+  pdf_document: 
+    fig_height: 4.0
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## ToothGrowth Dataset
+
+I preformed an analysis on the data frame R has in datasets named "ToothGrowth". In this dataset 
+they recorded the lengths of odontoblasts(which help teeth grow) in guinea pigs. The variables
+that were selected by the team taking the data were the method they used to get vitamin C to 
+the subjects, and the dosage they received. One method was to get them to take in vitamin C 
+with orange juice, which will be abbreviated OJ. The other method was to get the vitamin C
+from ascorbic acid(VC). Each method was given to 30 guinea pigs, but within each method they 
+had three different doses. The smallest dose was .5 mg/day, the middle dose was 1mg/day, and 
+the biggest dose was 2mg/day. First I sorted the data into 3 data frames, with each of the 
+doses isolated and compared the two supplements against head to head, with the code below. 
+```{r, echo=TRUE, results="hide"}
+library(datasets)
+smallestdose <- ToothGrowth[1:10,]
+smallestdose <- rbind.data.frame(smallestdose, ToothGrowth[31:40,])
+meddose <- ToothGrowth[11:20,]
+meddose <- rbind.data.frame(meddose, ToothGrowth[41:50,])
+biggestdose <- ToothGrowth[21:30,]
+biggestdose <- rbind.data.frame(biggestdose, ToothGrowth[51:60,])
+ojdata <- ToothGrowth[1:30,]
+vcdata <- ToothGrowth[31:60,]
+```
+The first data point from OJ was not paired with the first from VC, so I chose paired to be equal to false. 
+```{r, echo=TRUE, results="hide"}
+sd <- t.test(len ~ supp, paired=FALSE, var.equal=FALSE, data = smallestdose)
+md <- t.test(len ~ supp, paired=FALSE, var.equal=FALSE, data = meddose)
+bd <- t.test(len ~ supp, paired=FALSE, var.equal=FALSE, data = biggestdose)
+```
+The T tests produced the following results:
+
+The T values are 3.170 for the smallest dose, 4.03 for the middle dose, and -.046 for the biggest dose.
+The P values are .0064 for the smallest dose, .0010 for the middle dose, and .9639 for the biggest dose.
+The 95% confidence interval are 1.72 - 8.78, 2.80 - 9.06, and -3.80 - 3.64 going from smallest to biggest doses.
+Looking at these results we can see that for the smallest and middle dose that a null hypothesis of equal lengths of Odontoblasts using OJ and VC should be rejected. OJ has a much greater mean length for the two doses. The 95% confidence intervals do not include zero, so we can be pretty sure that randomness did not account for the difference in means. The largest dose however has results that lead us to fail to reject the null hypothesis of equal lengths for both 2.0mg/day OJ and VC. This is shown well in the graphs below.
+ 
+```{r, echo=FALSE}
+##layout(matrix(c(1,2,3),3,1), widths = lcm(5), heights = lcm(5))
+boxplot(len ~ supp, data = smallestdose, xlab="Suppliment", ylab="Length", main="0.5mg/day of VC and OJ")
+boxplot(len ~ supp, data = meddose, xlab="Suppliment", ylab="Length", main="1.0mg/day of VC and OJ")
+boxplot(len ~ supp, data = biggestdose, xlab="Suppliment", ylab="Length", main="2.0mg/day of VC and OJ")
+
+```
+
+## Comparing Doses
+
+For the next part of my  analysis, I compared each dose within both methods. I did not assume equal
+variance. So to do this I took the data from just OJ and ran tests to see if 0.5mg/day had the
+same mean as 1.0mg/day.I tested all of the combinations of dose within the same method. I wanted to
+see if more OJ or more VC would lead to an increase in length of odontoblasts for the guinea pigs.
+```{r, echo=TRUE, results="hide"}
+ltmoj<-t.test(len~dose,paired=FALSE,var.equal=FALSE,data=ojdata,subset=ojdata$dose!=2.0)
+lthoj<-t.test(len~dose,paired=FALSE,var.equal=FALSE,data=ojdata,subset=ojdata$dose!=1.0)
+mthoj<-t.test(len~dose,paired=FALSE,var.equal=FALSE,data=ojdata,subset=ojdata$dose!=0.5)
+ltmvc<-t.test(len~dose,paired=FALSE,var.equal=FALSE,data=vcdata,subset=vcdata$dose!=2.0)
+lthvc<-t.test(len~dose,paired=FALSE,var.equal=FALSE,data=vcdata,subset=vcdata$dose!=1.0)
+mthvc<-t.test(len~dose,paired=FALSE,var.equal=FALSE,data=vcdata,subset=vcdata$dose!=0.5)
+```
+```{r, echo=FALSE}
+boxplot(len ~ dose, data = ojdata, main = "OJ doses")
+boxplot(len ~ dose, data = vcdata, main = "VC doses")
+```
+None of the groups had a difference of mean which included 0 within the confidence interval, but the closest was in VC a dose of 1.0 and 2.0 the 95% confidence interval was from -6.531 to -.189. It was close, but one should conclude that increasing the dose from 1.0 to 2.0 will increase the length. This is an intuitive conclusion, assuming that vitamin C increases odontoblast length. You can reject all null hypothesis which have a dose having an equal mean length as another dose within its method. The largest t-value was in OJ comparing 0.5 to 2.0, with a value of -10.39. It was nearly impossible that randomness chance caused the difference in results to be that large. When you look at the data for both OJ and VC you can see that the mean from a dose of 0.5 is not within the other confidence intervals of the other doses that had the same method. We can say that we would reject the null hypothesis of the lowest dose having equal length to either of the other two doses for both OJ and VC.
+
+##Conclusion
+
+The analysis found that odontoblast length in guinea pigs should not be considered equal for orange juice and ascorbic acid when given in doses of 0.5 and 1.0 mg/day. The data showed a significantly larger mean length for OJ. There was not sufficient data to reject the null hypothesis of equal lengths in OJ and VC when the dose was 2.0 mg/day. When the different doses were tested within the same method, it was shown that, with at least 95% confidence, there were no two doses that produce the same mean length. As a general trend as the dose increased the length increased. I assumed that the samples were random and effectively represented the population. I did not assume equal variance in length.  
